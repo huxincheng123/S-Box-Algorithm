@@ -145,18 +145,6 @@ int main() {
         }
         int success = 0;
 
-        /*
-        vector<int> vis(1 << n, 0);
-        int p = 0;
-        rep(i, 0, (1 << n) - 1) {
-            if (!vis[i]) {
-                ++p;
-                for (int j = i; !vis[j]; j = original_s1[j])
-                    vis[j] = 1;
-            }
-        }
-        */
-
         rank_A = 0;
         vector<vector<int>> H(n * 2, vector<int>(n * 2));
         vector<vector<int>> A1(n, vector<int>(n)), B1(n, vector<int>(n));
@@ -291,23 +279,6 @@ int main() {
                 B1Inv[i][j] = H[i + n][j];
             }
         }
-
-        /*
-        int q = 0;
-        rep(i, 0, (1 << n) - 1)
-            vis[i] = 0;
-        rep(i, 0, (1 << n) - 1) {
-            if (!vis[i]) {
-                ++q;
-                for (int j = i; !vis[j]; j = original_s2[j])
-                    vis[j] = 1;
-            }
-        }
-        if ((p & 1) != (q & 1)) {
-            printf("NO\n");
-            continue;
-        }
-        */
 
         rank_B = 0;
         for (int i = 0; i < n; ++i) {
