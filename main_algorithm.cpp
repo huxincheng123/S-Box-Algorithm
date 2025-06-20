@@ -748,16 +748,9 @@ int main() {
         }
     }
     double arv = (double)cnt / test_num;
-    double s = 0;
-    for (ll i : result) {
-        s += (i - arv) * (i - arv);
-    }
-    s /= (test_num - 1);
-    s = sqrt(s);
     end = clock();
     printf("Use time: %fs\n", (double)(end - start) / CLOCKS_PER_SEC);
     printf("The number of success: %d\n", number_of_success);
     printf("Count: %lld\n", cnt);
-    printf("std: %f\n", s);
     return 0;
 }
