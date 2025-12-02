@@ -9,6 +9,8 @@
 #include <random>
 #include <map>
 #include <algorithm>
+#include <cstdarg>
+#include <unistd.h>
 #define is insert
 #define pb push_back
 #define fi first
@@ -20,6 +22,28 @@ typedef long long ll;
 
 const int N = 1e7 + 10;
 int is_odd[N];
+static FILE* g_console_out = stdout;
+static FILE* g_log_file = nullptr;
+
+int dual_printf(const char* fmt, ...) {
+    va_list args;
+    int ret_console = 0, ret_file = 0;
+    if (g_console_out) {
+        va_start(args, fmt);
+        ret_console = vfprintf(g_console_out, fmt, args);
+        va_end(args);
+    }
+    if (g_log_file) {
+        va_start(args, fmt);
+        ret_file = vfprintf(g_log_file, fmt, args);
+        va_end(args);
+    }
+    if (g_console_out) fflush(g_console_out);
+    if (g_log_file) fflush(g_log_file);
+    return ret_console ? ret_console : ret_file;
+}
+
+#define printf dual_printf
 
 struct xor_base {
     static const int max_size = 1010;
@@ -62,6 +86,36 @@ struct xor_base {
         return true;
     }
 } xor_base_A, xor_base_B;
+
+// -------------------- 新增工具函数 --------------------
+// 将“按列存储”的 n×n 线性变换 cols 作用到向量 x 上：cols[j] 是第 j 列（即基向量 e_j 的像）
+static inline int apply_linear(const vector<int>& cols, int x, int n) {
+    int y = 0;
+    for (int j = 0; j < n; ++j) if (x >> j & 1) y ^= cols[j];
+    return y;
+}
+
+// 规范化 S-box: out[x] = orig[x ^ c] ^ orig[c]
+static inline void normalize_sbox(const int *orig, int c, int n, vector<int>& out) {
+    const int size = 1 << n;
+    out.resize(size);
+    for (int i = 0; i < size; ++i) out[i] = orig[i ^ c] ^ orig[c];
+}
+// ------------------------------------------------------
+
+void print_vector_as_binary_matrix(const vector<int>& v, int n) {
+    // 将长度为 n 的向量逆序后，按位展开成 n×n 的 0/1 矩阵并输出
+    // 每一列对应一个逆序后的数字，从高位到低位对应矩阵的不同行
+    for (int row = 0; row < n; ++row) {
+        for (int col = 0; col < n; ++col) {
+            int x = v[n - 1 - col];                  // 逆序后的第 col 列对应的数
+            int bit = (x >> (n - 1 - row)) & 1;      // 从高位到低位依次作为矩阵的不同行
+            printf("%d", bit);
+            if (col + 1 < n) printf(" ");
+        }
+        printf("\n");
+    }
+}
 
 int n;
 int test_num;
@@ -116,10 +170,8 @@ void initial_all_set() {
     is_visit_B[0] = 1;
 }
 
-int main() {
-    freopen("./AB.txt", "w", stdout);
-    freopen("./data.txt", "r", stdin);
-    clock_t start, end;
+void solve() {
+clock_t start, end;
     start = clock();
     int number_of_success = 0;
     // input the number of test
@@ -128,8 +180,10 @@ int main() {
     vector<ll> result;
     for (int test_id = 1; test_id <= test_num; ++test_id) {
         ll tmp_cnt = cnt;
+        bool printed_sep = false;
         // input n and S-boxes
         scanf("%d", &n);
+        printf("Test pair #%d:\n", test_id);
         for (int i = 0; i < (1 << n); ++i) {
             scanf("%d", &original_s1[i]);
         }
@@ -154,7 +208,7 @@ int main() {
             for (int j = 0; j < n; ++j) {
                 int u = 0;
                 for (int k = 0; k < (1 << n); ++k) {
-                    if (k % (1 << j + 1) < 1 << j) {
+                    if (k % (1 << (j + 1)) < (1 << j)) {
                         u ^= (original_s1[k] >> i & 1);
                     }
                 }
@@ -285,7 +339,7 @@ int main() {
             for (int j = 0; j < n; ++j) {
                 int u = 0;
                 for (int k = 0; k < (1 << n); ++k) {
-                    if (k % (1 << j + 1) < 1 << j) {
+                    if (k % (1 << (j + 1)) < (1 << j)) {
                         u ^= original_s2[k] >> i & 1;
                     }
                 }
@@ -430,10 +484,12 @@ int main() {
         }
         initial_s_box1(0);
 
-        printf("rank A: %d, rank B: %d\n", rank_A, rank_B);
+        printf("First S-box rank: %d, Second S-box rank: %d\n", rank_A, rank_B);
 
         if (rank_A != rank_B) {
-            printf("NO\n");
+            printf("Affine equivalent: NO\n");
+            printf("---- End of test pair #%d ----\n\n", test_id);
+            printed_sep = true;
             continue;
         }
         int rank = rank_A;
@@ -552,8 +608,8 @@ int main() {
                     continue;
                 }
                 st.pb({ {mn1,mn2,cur},{tmp_base_A,tmp_base_B} });
-                int c1 = 0, c2 = 0;
-                while (c1 < new_of_A.size() || c2 < new_of_B.size()) {
+                int c1 = 0, c2i = 0;
+                while (c1 < new_of_A.size() || c2i < new_of_B.size()) {
                     while (c1 < new_of_A.size()) {
                         int tmp = new_of_A[c1++];
                         if (is_in_check_of_A[tmp]) {
@@ -613,8 +669,8 @@ int main() {
                     if (rejected) {
                         break;
                     }
-                    while (c2 < new_of_B.size()) {
-                        int tmp = new_of_B[c2++];
+                    while (c2i < new_of_B.size()) {
+                        int tmp = new_of_B[c2i++];
                         if (is_in_check_of_B[tmp]) {
                             continue;
                         }
@@ -677,18 +733,21 @@ int main() {
                 if (check_of_B.size() == 1 << n) {
                     success = 1;
                     ++number_of_success;
-                    printf("YES\n");
-                    printf("c1: 0, c2: %d\n", c2);
-                    printf("%d\n", n);
+                    printf("Affine equivalent: YES\n");
+
+                    printf("First S-box:\n");
                     for (int i = 0; i < (1 << n); ++i) {
                         printf("%d ", tmp_original_s1[i]);
                     }
                     printf("\n");
+                    printf("Second S-box:\n");
                     for (int i = 0; i < (1 << n); ++i) {
                         printf("%d ", tmp_original_s2[i]);
                     }
                     printf("\n");
                     vector<int> tmp_mat(n);
+                    // 计算 A 的列向量（按列表示）
+                    vector<int> Acols(n);
                     for (int i = 0; i < n; ++i) {
                         int u = 0, v = 0;
                         for (int j = 0; j < n; ++j) {
@@ -703,30 +762,63 @@ int main() {
                             }
                         }
                         tmp_mat[i] = v;
+                        Acols[i] = v;
                     }
-                    for (int i = 0; i < n; ++i) {
-                        printf("%d ", tmp_mat[i]);
-                    }
-                    printf("\n");
+                    printf("L1 matrix:\n");
+                    print_vector_as_binary_matrix(tmp_mat, n);
+
+                    // 计算 B 的列向量（按列表示）
                     for (int i = 0; i < n; ++i) {
                         int u = 0, v = 0;
-                        for (int j = 0; j < n; ++j) {
-                            u ^= B2[j][i] << j;
-                        }
+                        for (int j = 0; j < n; ++j) u ^= B2[j][i] << j;
                         u = value_of_B[u];
-                        for (int j = 0; j < n; ++j) {
-                            if (u >> j & 1) {
-                                for (int k = 0; k < n; ++k) {
-                                    v ^= B1Inv[k][j] << k;
-                                }
-                            }
+                        for (int j = 0; j < n; ++j) if (u >> j & 1) {
+                            for (int k = 0; k < n; ++k) v ^= B1Inv[k][j] << k;
                         }
                         tmp_mat[i] = v;
+                        // store Bcols as well
                     }
+                    // we printed the first tmp_mat (Acols) above; print Bcols now
+                    vector<int> Bcols(n);
                     for (int i = 0; i < n; ++i) {
-                        printf("%d ", tmp_mat[i]);
+                        int u = 0, v = 0;
+                        for (int j = 0; j < n; ++j) u ^= B2[j][i] << j;
+                        u = value_of_B[u];
+                        for (int j = 0; j < n; ++j) if (u >> j & 1) {
+                            for (int k = 0; k < n; ++k) v ^= B1Inv[k][j] << k;
+                        }
+                        Bcols[i] = v;
                     }
-                    printf("\n");
+                    printf("L2 matrix:\n");
+                    print_vector_as_binary_matrix(Bcols, n);
+
+                    // a_sf 是在 Sf2 空间枚举的平移（你 for 循环里的变量 c2）
+int a_sf = c2;
+
+// 映回原 S2 输入空间：a_orig = A2 * a_sf
+int a_orig = 0;
+for (int j = 0; j < n; ++j) if (a_sf >> j & 1) {
+    for (int k = 0; k < n; ++k) a_orig ^= (A2[k][j] << k);
+}
+
+// 恢复原式的 c1、c2：
+// c1 = L1(a_orig)
+int c1_vec = apply_linear(Acols, a_orig, n);
+
+// c2 = S1(0) ^ L2( S2(a_orig) )
+int c2_vec = tmp_original_s1[0] ^ apply_linear(Bcols, tmp_original_s2[a_orig], n);
+
+char c1_bin[9], c2_bin[9];
+for (int i = 7; i >= 0; --i) {
+    c1_bin[7 - i] = (c1_vec >> i & 1) ? '1' : '0';
+    c2_bin[7 - i] = (c2_vec >> i & 1) ? '1' : '0';
+}
+c1_bin[8] = c2_bin[8] = '\0';
+printf("c1 (8-bit binary): %s\n", c1_bin);
+printf("c2 (8-bit binary): %s\n", c2_bin);
+
+                    printf("---- End of test pair #%d ----\n\n", test_id);
+                    printed_sep = true;
                     break;
                 }
                 while (is_in_new_of_A[mn1] || is_in_check_of_A[mn1])
@@ -744,13 +836,34 @@ int main() {
         }
 
         if (!success) {
-            printf("NO\n");
+            printf("Affine equivalent: NO\n");
+        }
+        if (!printed_sep) {
+            printf("---- End of test pair #%d ----\n\n", test_id);
         }
     }
     double arv = (double)cnt / test_num;
+    double s = 0;
+    for (ll i : result) {
+        s += (i - arv) * (i - arv);
+    }
+    s /= (test_num - 1);
+    s = sqrt(s);
     end = clock();
     printf("Use time: %fs\n", (double)(end - start) / CLOCKS_PER_SEC);
     printf("The number of success: %d\n", number_of_success);
-    printf("Count: %lld\n", cnt);
+}
+
+int main() {
+    
+    freopen("three_sbox.txt", "r", stdin);
+    // freopen("data_21.txt", "r", stdin);
+    g_console_out = fdopen(dup(STDOUT_FILENO), "w");
+    if (!g_console_out) {
+        g_console_out = stdout;
+    }
+    g_log_file = fopen("result.txt", "w");
+    
+    solve();
     return 0;
 }
