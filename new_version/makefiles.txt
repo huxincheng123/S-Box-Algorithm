@@ -1,0 +1,29 @@
+# Makefile for sbox_eq
+CXX      = g++
+CXXFLAGS = -std=c++17 -O3 -Wall -Wextra -I./include
+LDFLAGS  =
+
+SRCDIR   = src
+OBJDIR   = obj
+SOURCES  = $(wildcard $(SRCDIR)/*.cpp)
+OBJECTS  = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+TARGET   = sbox_eq
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(LDFLAGS) $^ -o $@
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
+
+clean:
+	rm -rf $(OBJDIR) $(TARGET)
+
+run: $(TARGET)
+	./$(TARGET)
+
+.PHONY: all clean run
