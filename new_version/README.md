@@ -3,7 +3,7 @@
 ## English
 
 ### Overview
-`main.cpp` checks affine equivalence between pairs of S-boxes. It reads multiple test cases, computes ranks, and if equivalent prints the affine transforms (L1/L2) and the affine shifts (c1/c2).
+This is a new version that mainly encapsulates the methods. Download the `new_version` folder to your local machine and proceed with the installation. `main.cpp` checks affine equivalence between pairs of S-boxes. It reads multiple test cases, computes ranks, and if equivalent prints the affine transforms (L1/L2) and the affine shifts (c1/c2).
 
 ## Target Platform
 - **Linux**（GCC ≥ 7 / Clang ≥ 6）
@@ -33,7 +33,7 @@
 ## 中文
 
 ### 概览
-`main.cpp` 用于判断一对 S-box 是否仿射等价，读取多组测试，计算秩并在等价时输出仿射变换 L1/L2 以及平移 c1/c2。
+这是一个新的版本，主要对方法进行封装，将new_version文件夹下载到本地进行安装，`main.cpp` 用于判断一对 S-box 是否仿射等价，读取多组测试，计算秩并在等价时输出仿射变换 L1/L2 以及平移 c1/c2。
 
 ## 运行平台
 - **Linux**（GCC ≥ 7 / Clang ≥ 6）
