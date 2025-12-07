@@ -33,7 +33,7 @@ This is a new version that mainly encapsulates the methods. Download the `new_ve
 ## 中文
 
 ### 概览
-这是一个新的版本，主要对方法进行封装，将new_version文件夹下载到本地进行安装，`main.cpp` 用于判断一对 S-box 是否仿射等价，读取多组测试，计算秩并在等价时输出仿射变换 L1/L2 以及平移 c1/c2。
+这是一个新的版本，主要对方法进行封装，将`new_version`文件夹下载到本地进行安装，`main.cpp` 用于判断一对 S-box 是否仿射等价，读取多组测试，计算秩并在等价时输出仿射变换 L1/L2 以及平移 c1/c2。
 
 ## 运行平台
 - **Linux**（GCC ≥ 7 / Clang ≥ 6）
